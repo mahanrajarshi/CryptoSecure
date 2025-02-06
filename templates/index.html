@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Encryption Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Secure Cryptographic Operations</h1>
+        
+        <div class="algorithm-select">
+            <label for="algorithm">Select Algorithm:</label>
+            <select id="algorithm" onchange="toggleFields()">
+                <option value="aes-256-cbc">AES-256-CBC</option>
+                <option value="tripledes">Triple DES</option>
+                <option value="rsa-2048">RSA-2048</option>
+            </select>
+        </div>
+
+        <div class="operation-select">
+            <button onclick="toggleOperation('encrypt')">Encrypt</button>
+            <button onclick="toggleOperation('decrypt')">Decrypt</button>
+        </div>
+
+        <div id="encryptSection" class="section">
+            <h2>Encryption</h2>
+            <div id="aesFields" class="algorithm-fields">
+                <input type="password" id="password" placeholder="Encryption Password" value="secure24bytekey1234567890">
+                <textarea id="plaintext" placeholder="Enter text to encrypt"></textarea>
+            </div>
+            <button onclick="performOperation('encrypt')">Encrypt Data</button>
+        </div>
+
+        <div id="decryptSection" class="section" style="display:none;">
+            <h2>Decryption</h2>
+            <div id="aesDecryptFields" class="algorithm-fields">
+                <input type="password" id="decryptPassword" placeholder="Decryption Password">
+                <input type="text" id="iv" placeholder="Initialization Vector (IV)">
+                <input type="text" id="salt" placeholder="Salt">
+            </div>
+            <textarea id="ciphertext" placeholder="Enter ciphertext to decrypt"></textarea>
+            <button onclick="performOperation('decrypt')">Decrypt Data</button>
+        </div>
+
+        <div id="result" class="result-container"></div>
+    </div>
+
+    <script>
+        function toggleOperation(op) {
+            document.getElementById('encryptSection').style.display = 
+                op === 'encrypt' ? 'block' : 'none';
+            document.getElementById('decryptSection').style.display = 
+                op === 'decrypt' ? 'block' : 'none';
+        }
+
+        function toggleFields() {
+            const algorithm = document.getElementById('algorithm').value;
+            // Implement UI changes based on algorithm selection
+        }
+
+        async function performOperation(operation) {
+            const algorithm = document.getElementById('algorithm').value;
+            const payload = {
+                algorithm: algorithm,
+                plaintext: document.getElementById('plaintext').value,
+                ciphertext: document.getElementById('ciphertext').value,
+                iv: document.getElementById('iv').value,
+                salt: document.getElementById('salt').value
+            };
+            
+            payload.password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`/${operation}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displayResult(data);
+                } else {
+                    displayError(data.error);
+                }
+            } catch (error) {
+                displayError('Network error - please try again');
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            resultDiv.style.color = '#2ecc71';
+        }
+
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `Error: ${message}`;
+            resultDiv.style.color = '#e74c3c';
+        }
+    </script>
+</body>
+</html>
