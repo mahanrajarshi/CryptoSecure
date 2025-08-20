@@ -3,11 +3,14 @@ from crypto_service import CryptoService
 from flask_wtf.csrf import CSRFProtect
 import logging
 import secrets
+import os
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
+
+# Updated configuration for Render deployment
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=False,  # Set to True later when HTTPS is enabled
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax'
 )
@@ -22,7 +25,8 @@ def add_security_headers(response):
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1; mode=block',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+        # Remove HSTS for initial deployment, add back later with HTTPS
+        # 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
     }
     for header, value in headers.items():
         response.headers[header] = value
@@ -31,6 +35,11 @@ def add_security_headers(response):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+# Health check endpoint for Render
+@app.route('/health')
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt():
@@ -86,4 +95,6 @@ def decrypt():
         return jsonify({'error': 'Decryption failed'}), 500
 
 if __name__ == '__main__':
-    app.run(ssl_context='adhoc', host='0.0.0.0', port=5000)
+    # Updated for Render deployment - use PORT environment variable
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
