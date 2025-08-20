@@ -1,9 +1,9 @@
 import os
 import multiprocessing
 
-# Dynamic worker count based on available CPUs (better for cloud deployment)
-workers = multiprocessing.cpu_count() * 2 + 1
-worker_class = 'gevent'
+# Use fewer workers for better compatibility
+workers = 2
+worker_class = 'sync'  # Changed from 'gevent' to 'sync' for compatibility
 
 # Use PORT environment variable provided by Render
 bind = f"0.0.0.0:{os.environ.get('PORT', 5000)}"
