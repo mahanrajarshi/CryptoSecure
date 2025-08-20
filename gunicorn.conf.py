@@ -1,6 +1,12 @@
-workers = 4
+import os
+import multiprocessing
+
+# Dynamic worker count based on available CPUs (better for cloud deployment)
+workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = 'gevent'
-bind = '0.0.0.0:5000'
+
+# Use PORT environment variable provided by Render
+bind = f"0.0.0.0:{os.environ.get('PORT', 5000)}"
 timeout = 120
 keepalive = 5
 preload_app = True
@@ -14,7 +20,3 @@ limit_request_field_size = 8190
 accesslog = '-'
 errorlog = '-'
 loglevel = 'info'
-
-# SSL configuration
-certfile = '/etc/letsencrypt/live/example.com/fullchain.pem'
-keyfile = '/etc/letsencrypt/live/example.com/privkey.pem'
